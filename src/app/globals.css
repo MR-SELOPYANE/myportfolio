@@ -1,26 +1,111 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* === Global Styles === */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', sans-serif;
+  background: radial-gradient(circle at 20% 20%, #152e6f, #38bdf8 70%, #4a5163 100%);
+  color: #f8fafc;
+  overflow-x: hidden;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Remove focus outlines on navbar links */
+.navbar-link:focus-visible {
+  outline: none;
+}
+
+/* === Neon Scrollbars === */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #4a5163;
+}
+::-webkit-scrollbar-thumb {
+  background: #38bdf8;
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.7);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #60a5fa;
+}
+
+/* === Glass Panels === */
+.glass-panel {
+  background: rgba(63, 63, 74, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(56, 189, 248, 0.1);
+  transition: all 0.3s ease-in-out;
+}
+
+.glass-panel:hover {
+  border-color: rgba(56, 189, 248, 0.4);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+}
+
+/* === Text Glow === */
+.text-glow {
+  text-shadow: 0 0 5px rgba(56, 189, 248, 0.6),
+               0 0 10px rgba(56, 189, 248, 0.4),
+               0 0 20px rgba(56, 189, 248, 0.2);
+}
+
+/* === Neon Button === */
+.btn-neon {
+  padding: 0.5rem 1.5rem; /* py-2 px-6 */
+  border-radius: 9999px; /* rounded-full */
+  font-weight: 600; /* font-semibold */
+  font-size: 0.875rem; /* text-sm */
+  background-color: rgba(56, 189, 248, 0.8); /* neon-blue */
+  color: #0b1120; /* dark space text */
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
+  transition: all 0.3s ease-in-out;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.btn-neon:hover {
+  transform: scale(1.05);
+  background-color: #38bdf8;
+  box-shadow: 0 0 25px rgba(56, 189, 248, 0.8);
+}
+
+/* === Fade & Motion Animations === */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 10px rgba(56, 189, 248, 0.3); }
+  50% { box-shadow: 0 0 25px rgba(56, 189, 248, 0.6); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 5s ease-in-out infinite;
+}
+
+/* === Optional: Custom shadows === */
+.shadow-neon-blue\/30 {
+  --tw-shadow-color: rgba(59, 130, 246, 0.3);
 }
