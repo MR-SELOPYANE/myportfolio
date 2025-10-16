@@ -40,7 +40,7 @@ export default function Sidebar() {
         {/* Top Languages - Show up to 10 */}
         <div>
           <img
-          src="https://github-readme-stats.vercel.app/api/top-langs?username=mr-selopyane&show_icons=true&locale=en&layout=compact&theme=dark"
+          src="https://github-readme-stats.vercel.app/api/top-langs?username=mr-selopyane&show_icons=true&locale=en&layout=compact&"
           alt="Languages"
           className="w-full rounded-sm"
           loading="lazy"
