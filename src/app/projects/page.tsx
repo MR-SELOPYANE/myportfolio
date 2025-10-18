@@ -1,7 +1,7 @@
 'use client';
 export const dynamic = 'force-dynamic';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 
 interface GitHubRepo {
@@ -25,81 +25,100 @@ export default function ProjectsPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<string>('All');
 
-  // ✅ Must be NEXT_PUBLIC_ to be available in browser
-  const GITHUB_TOKEN = process.env.NEXT_PUBLIC_GITHUB_TOKEN;
+  // NEXT_PUBLIC_ env vars are replaced at build time and safe in client
+  const GITHUB_TOKEN = process.env.NEXT_PUBLIC_GITHUB_TOKEN ?? '';
 
   useEffect(() => {
-    // 🔍 Debug: Check if token is available
-    console.log('[ProjectsPage] GitHub token available?', !!GITHUB_TOKEN);
-
     const fetchRepos = async () => {
+      setLoading(true);
+      setError(null);
       try {
         const url = 'https://api.github.com/users/mr-selopyane/repos?sort=updated&per_page=100';
-        const headers = GITHUB_TOKEN
-          ? { Authorization: `token ${GITHUB_TOKEN}` }
-          : {};
+        const headers: Record<string, string> = {
+          Accept: 'application/vnd.github.v3+json',
+        };
+        if (GITHUB_TOKEN) headers.Authorization = `token ${GITHUB_TOKEN}`;
 
-        console.log('[ProjectsPage] Fetching from:', url);
-        const response = await fetch(url, { headers });
+        console.debug('[ProjectsPage] Fetching repos from', url, 'with token?', !!GITHUB_TOKEN);
 
-        console.log('[ProjectsPage] GitHub API status:', response.status);
+        const response = await fetch(url, { headers, cache: 'no-store' });
 
-        if (!response.ok) {
-          const errorMsg = await response.text();
-          console.error('[ProjectsPage] GitHub API error:', errorMsg);
-          throw new Error(`Failed to fetch repos (HTTP ${response.status})`);
+        console.debug('[ProjectsPage] Response status', response.status);
+
+        // Try to read text first (helps show 403/JSON error messages)
+        const text = await response.text();
+        let data: any;
+        try {
+          data = text ? JSON.parse(text) : [];
+        } catch (parseErr) {
+          // if parsing fails, show raw text
+          throw new Error(`Failed to parse GitHub response: ${parseErr} — response: ${text}`);
         }
 
-        const data: GitHubRepo[] = await response.json();
-        console.log('[ProjectsPage] Total repos fetched:', data.length);
+        if (!response.ok) {
+          // GitHub often returns an object with message and documentation_url
+          const msg = data && data.message ? `${data.message} (${response.status})` : `HTTP ${response.status}`;
+          throw new Error(`GitHub API error: ${msg}`);
+        }
 
-        // ✅ Keep non-fork repos — even if no description (more inclusive)
-        const filteredRepos = data.filter(repo => !repo.fork && !repo.name.startsWith('.'));
+        // Validate shape — defensive
+        if (!Array.isArray(data)) throw new Error('GitHub returned unexpected data shape.');
 
-        console.log('[ProjectsPage] Non-fork repos after filter:', filteredRepos.length);
+        const typed: GitHubRepo[] = data;
+        const filteredRepos = typed.filter((repo) => !repo.fork && !repo.name.startsWith('.'));
+        console.debug('[ProjectsPage] Filtered repos count', filteredRepos.length);
 
         setRepos(filteredRepos);
         setFiltered(filteredRepos);
       } catch (err: any) {
-        const message = err.message || 'Unknown error';
-        setError(`Unable to load projects: ${message}`);
-        console.error('[ProjectsPage] Fetch failed:', err);
+        console.error('[ProjectsPage] fetch error', err);
+        setError(err?.message ?? String(err));
       } finally {
         setLoading(false);
       }
     };
 
     fetchRepos();
-  }, [GITHUB_TOKEN]);
+    // NOTE: intentionally not depending on GITHUB_TOKEN here to avoid double-runs in dev
+    // If you change token at runtime, refresh the page.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const formatDate = (dateString: string) =>
-    new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'Unknown';
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+      });
+    } catch {
+      return dateString;
+    }
+  };
+
+  const languages = useMemo(() => {
+    const set = new Set<string>();
+    repos.forEach((r) => {
+      if (r.language) set.add(r.language);
     });
-
-  const languages = [
-    'All',
-    ...new Set(repos.map((r) => r.language).filter((l): l is string => Boolean(l))),
-  ];
+    return ['All', ...Array.from(set)];
+  }, [repos]);
 
   const handleFilter = (lang: string) => {
     setActiveFilter(lang);
     setFiltered(lang === 'All' ? repos : repos.filter((r) => r.language === lang));
   };
 
-  // 🟡 Loading state
+  // Loading state
   if (loading)
     return (
       <div className="max-w-6xl mx-auto p-6 text-center">
-        <h1 className="text-4xl font-bold text-neon-blue animate-pulse">
-          Loading Projects...
-        </h1>
+        <h1 className="text-4xl font-bold text-neon-blue animate-pulse">Loading Projects...</h1>
         <p className="text-stars-200">Fetching your GitHub repositories...</p>
       </div>
     );
 
-  // 🔴 Error state
+  // Error state
   if (error)
     return (
       <div className="max-w-6xl mx-auto p-6 text-center">
@@ -108,13 +127,13 @@ export default function ProjectsPage() {
           {error}
         </div>
         <p className="mt-4 text-stars-200">
-          Make sure your GitHub token is set in <code>.env.local</code> as{' '}
-          <code>NEXT_PUBLIC_GITHUB_TOKEN</code>.
+          Common causes: rate limit (no token) or invalid token. Make sure your GitHub token is set in{' '}
+          <code>.env.local</code> as <code>NEXT_PUBLIC_GITHUB_TOKEN</code>, then restart Next.js.
         </p>
       </div>
     );
 
-  // 🟢 Success state
+  // Success
   const featured = filtered.length > 0 ? filtered[0] : null;
   const nonFeatured = filtered.slice(1);
 
@@ -126,9 +145,7 @@ export default function ProjectsPage() {
       <div className="relative z-10 max-w-6xl mx-auto p-6 space-y-10">
         <div className="text-center">
           <h1 className="text-5xl font-bold text-neon-blue mb-2">My Projects</h1>
-          <p className="text-stars-200">
-            A cosmic collection of my GitHub work — from AI ideas to full-stack builds.
-          </p>
+          <p className="text-stars-200">A cosmic collection of my GitHub work — from AI ideas to full-stack builds.</p>
         </div>
 
         {featured && (
@@ -164,6 +181,7 @@ export default function ProjectsPage() {
           </motion.div>
         )}
 
+        {/* Filter Buttons */}
         <div className="flex flex-wrap justify-center gap-3">
           {languages.map((lang) => (
             <button
@@ -180,9 +198,10 @@ export default function ProjectsPage() {
           ))}
         </div>
 
+        {/* Projects Grid */}
         <LayoutGroup>
-          <motion.div className="flex overflow-x-auto pb-4 gap-6 hide-scrollbar">
-            <AnimatePresence> {/* ✅ Removed invalid mode="popLayout" */}
+          <div className="flex overflow-x-auto pb-4 gap-6 hide-scrollbar">
+            <AnimatePresence initial={false}>
               {nonFeatured.map((repo) => (
                 <motion.div
                   key={repo.id}
@@ -195,11 +214,9 @@ export default function ProjectsPage() {
                   className="glass-panel flex-shrink-0 w-[260px] p-5 rounded-2xl bg-space-800/60 border border-neon-blue/20"
                 >
                   <h3 className="text-lg font-semibold text-neon-blue mb-2 truncate">{repo.name}</h3>
-                  <p className="text-sm text-stars-200 line-clamp-3 mb-3">
-                    {repo.description || 'No description provided.'}
-                  </p>
+                  <p className="text-sm text-stars-200 line-clamp-3 mb-3">{repo.description || 'No description provided.'}</p>
                   <div className="flex justify-between text-xs text-stars-300 mb-3">
-                    <span>⭐ {repo.stargazers_count}</span>
+                    <span>⭐ {repo.stargazers_count ?? 0}</span>
                     <span>{formatDate(repo.updated_at)}</span>
                   </div>
                   <a
@@ -213,7 +230,7 @@ export default function ProjectsPage() {
                 </motion.div>
               ))}
             </AnimatePresence>
-          </motion.div>
+          </div>
         </LayoutGroup>
       </div>
     </div>
