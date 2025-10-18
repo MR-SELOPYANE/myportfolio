@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -37,95 +38,121 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-8">
-      <h1 className="text-4xl font-bold text-neon-blue text-center text-glow">
-        Contact Me
-      </h1>
-      <p className="text-stars-200 text-center mb-8">
-        I’m open to freelance opportunities, collaborations, or interesting projects. Reach out and I’ll get back to you soon!
-      </p>
+    <div className="relative min-h-screen flex flex-col justify-center bg-gradient-to-b from-space-900 via-space-800 to-space-900 overflow-hidden">
+      {/* Background animation */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_20%,rgba(59,130,246,0.15),transparent_60%)]" />
+      
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="relative z-10 max-w-6xl mx-auto p-8 grid md:grid-cols-2 gap-10 items-center"
+      >
+        {/* Left Panel — Contact Info */}
+        <div className="space-y-6">
+          <h1 className="text-5xl font-bold text-neon-blue text-glow mb-4">Let’s Connect</h1>
+          <p className="text-stars-200 leading-relaxed mb-6">
+            I’m always open to new opportunities, collaborations, or tech discussions. Drop me a message — I usually reply within 24 hours 🚀
+          </p>
 
-      {/* Contact Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {[
-          { title: "Email", value: "kabeloselopyane@gmail.com", link: "mailto:kabeloselopyane@gmail.com" },
-          { title: "GitHub", value: "@MR-SELOPYANE", link: "https://github.com/MR-SELOPYANE" },
-          { title: "LinkedIn", value: "Kabelo Selopyane", link: "https://www.linkedin.com/in/kabelo-selopyane" },
-        ].map((contact) => (
-          <a
-            key={contact.title}
-            href={contact.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-space-800 glass-panel p-5 rounded-xl border border-space-700 shadow-neon-blue/20 hover:scale-105 transform transition-all"
-          >
-            <h3 className="text-cosmic-blue font-semibold mb-2">{contact.title}</h3>
-            <p className="text-stars-100 hover:text-neon-blue transition">{contact.value}</p>
-          </a>
-        ))}
-      </div>
-
-      {/* Contact Form */}
-      <div className="bg-space-800 glass-panel p-8 rounded-2xl border border-space-700 shadow-neon-blue/20">
-        <h2 className="text-2xl font-semibold text-neon-blue text-glow mb-6">
-          Send a Message
-        </h2>
-
-        {isSuccess && (
-          <div className="mb-4 p-4 bg-green-900/30 border border-green-700 text-green-300 rounded shadow-sm">
-            Message sent successfully! I’ll get back to you soon.
+          <div className="grid gap-5">
+            {[
+              { title: "Email", value: "kabeloselopyane@gmail.com", link: "mailto:kabeloselopyane@gmail.com" },
+              { title: "GitHub", value: "@MR-SELOPYANE", link: "https://github.com/MR-SELOPYANE" },
+              { title: "LinkedIn", value: "Kabelo Selopyane", link: "https://www.linkedin.com/in/kabelo-selopyane" },
+            ].map((contact, i) => (
+              <motion.a
+                key={contact.title}
+                href={contact.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.2 }}
+                className="p-4 rounded-xl border border-neon-blue/20 bg-space-800/60 hover:border-neon-pink/60 shadow-lg hover:shadow-neon-blue/30 transition-all"
+              >
+                <h3 className="text-cosmic-blue font-semibold mb-1">{contact.title}</h3>
+                <p className="text-stars-100">{contact.value}</p>
+              </motion.a>
+            ))}
           </div>
-        )}
+        </div>
 
-        {error && (
-          <div className="mb-4 p-4 bg-red-900/30 border border-red-700 text-red-300 rounded shadow-sm">
-            {error}
-          </div>
-        )}
+        {/* Right Panel — Contact Form */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2, duration: 0.6 }}
+          className="bg-space-800/70 p-8 rounded-2xl border border-space-600 backdrop-blur-lg shadow-xl shadow-neon-blue/20"
+        >
+          <h2 className="text-2xl font-semibold text-neon-blue mb-6 text-glow">Send a Message</h2>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {[
-            { id: "name", label: "Name", type: "text" },
-            { id: "email", label: "Email", type: "email" },
-          ].map((field) => (
-            <div key={field.id}>
-              <label htmlFor={field.id} className="block text-sm text-stars-200 mb-1">
-                {field.label}
-              </label>
+          <AnimatePresence>
+            {isSuccess && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="mb-4 p-4 bg-green-900/30 border border-green-700 text-green-300 rounded-lg shadow"
+              >
+                Message sent successfully! 🚀 I’ll get back to you soon.
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {error && (
+            <div className="mb-4 p-4 bg-red-900/30 border border-red-700 text-red-300 rounded-lg shadow">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label htmlFor="name" className="block text-sm text-stars-200 mb-1">Name</label>
               <input
-                type={field.type}
-                id={field.id}
-                name={field.id}
+                id="name"
+                name="name"
+                type="text"
                 required
                 className="w-full px-4 py-2 bg-space-700 border border-space-600 rounded-lg text-stars-100 focus:outline-none focus:ring-1 focus:ring-neon-blue transition"
               />
             </div>
-          ))}
 
-          <div>
-            <label htmlFor="message" className="block text-sm text-stars-200 mb-1">
-              Message
-            </label>
-            <textarea
-              id="message"
-              name="message"
-              rows={5}
-              required
-              className="w-full px-4 py-2 bg-space-700 border border-space-600 rounded-lg text-stars-100 focus:outline-none focus:ring-1 focus:ring-neon-blue transition"
-            ></textarea>
-          </div>
+            <div>
+              <label htmlFor="email" className="block text-sm text-stars-200 mb-1">Email</label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                className="w-full px-4 py-2 bg-space-700 border border-space-600 rounded-lg text-stars-100 focus:outline-none focus:ring-1 focus:ring-neon-blue transition"
+              />
+            </div>
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className={`w-full py-3 px-6 rounded-xl font-semibold text-space-900 bg-neon-blue hover:bg-neon-pink text-glow transition-all ${
-              isSubmitting ? "opacity-60 cursor-not-allowed" : "shadow-neon-blue/50 hover:scale-105"
-            }`}
-          >
-            {isSubmitting ? "Sending..." : "Send Message"}
-          </button>
-        </form>
-      </div>
+            <div>
+              <label htmlFor="message" className="block text-sm text-stars-200 mb-1">Message</label>
+              <textarea
+                id="message"
+                name="message"
+                rows={5}
+                required
+                className="w-full px-4 py-2 bg-space-700 border border-space-600 rounded-lg text-stars-100 focus:outline-none focus:ring-1 focus:ring-neon-blue transition"
+              ></textarea>
+            </div>
+
+            <motion.button
+              type="submit"
+              disabled={isSubmitting}
+              whileHover={{ scale: isSubmitting ? 1 : 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              className={`w-full py-3 rounded-xl font-semibold text-space-900 bg-gradient-to-r from-neon-blue to-neon-pink hover:opacity-90 transition-all shadow-lg shadow-neon-blue/40 ${
+                isSubmitting ? "opacity-60 cursor-not-allowed" : ""
+              }`}
+            >
+              {isSubmitting ? "Sending..." : "Send Message"}
+            </motion.button>
+          </form>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }
