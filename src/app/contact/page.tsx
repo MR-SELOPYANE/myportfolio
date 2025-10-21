@@ -276,7 +276,7 @@ export default function ContactPage() {
                 </div>
                 <div className={`flex justify-between text-xs mt-1 ${isNearLimit ? 'text-neon-pink' : 'text-stars-300'}`}>
                   <span>{charCount}/{MAX_CHARS}</span>
-                  <span>{isNearLimit ? '⚠️ Signal overload!' : 'Keep it cosmic ✨'}</span>
+                  <span>{isNearLimit ? '⚠️ Signal overload!' : ''}</span>
                 </div>
               </div>
 
